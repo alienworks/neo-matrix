@@ -1,0 +1,13 @@
+node_modules
+.vscode
+.idea
+lib
+dist
+
+# logs file and output
+*.log
+output
+*.csv
+*.csv#
+*.xlsx
+*.xlsx#
