@@ -2,11 +2,22 @@ import fs from "fs"
 import { Readable } from "stream"
 import { MatrixRPC } from "./matricRpc"
 
+// Constants
+// a number constant use for retrying request, 3 is sufficient enough add more if you are not sure
+const initialRetryTime = 5
+
+
+// Interfaces
 interface SingleNodeResponse {
     status: boolean | string
     response?: any
 }
 
+interface SingleNodeConfig {
+    transformer?: () => any
+}
+
+// Helper functions
 function singleNodeResponse(status: boolean | string, response?: any): SingleNodeResponse {
     return { status, response }
 }
@@ -32,12 +43,8 @@ function createLogFile() {
     return `${currentTime()}-error.log`
 }
 
-interface SingleNodeConfig {
-    transformer?: () => any
-}
 
-
-// TODO: add transformer
+// Main Class TODO: add transformer
 export class SingleNode {
     private client: MatrixRPC
 
@@ -52,7 +59,7 @@ export class SingleNode {
     public blockNumbers = 10
     public endHeight = 460000
 
-    private retryTime = 3
+    private retryTime = initialRetryTime
 
     constructor(url: string, config: SingleNodeConfig = {}) {
         this.client = new MatrixRPC(url)
@@ -65,10 +72,11 @@ export class SingleNode {
 
             const message = `[MATRIX REQUEST SUCCEEDED] ${method.name} - ${this.client.net}\n`
             console.log(message)
-            this.retryTime = 3
+            this.retryTime = initialRetryTime
 
-            const out = fs.createWriteStream(this.logFileName, { flags: 'a+' })
-            Readable.from(message).pipe(out)
+            // Log success message to log files. But it is unnecessary
+            // const out = fs.createWriteStream(this.logFileName, { flags: 'a+' })
+            // Readable.from(message).pipe(out)
 
             return singleNodeResponse('✔', result)
         } catch (e) {
