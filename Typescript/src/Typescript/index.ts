@@ -7,25 +7,14 @@ import { SingleNode } from "./singleNode"
 
 const jsoncsv = require("json-csv")
 
-function getPort(node: any) {
-    if (node.port) return node.port
-
-    if (node.protocol === 'http') {
-        return '10332'
-    }
-    return  '10331'
-}
-
+const now = Date.now()
 
 const requests = nodes.map(async node => {
-    const protocol = node.protocol || 'http'
-    const port = getPort(node)
-
-    const url = `${protocol}://${node.url}:${port}`
-    const cuttingLine = `\n--------------------- Requesting ${url} ---------------------\n`
+    const url = node.url
+    const cuttingLine = `--------------------- Requesting ${url} ---------------------\n`
     console.log(cuttingLine)
 
-    const singleNode = new SingleNode(url)
+    const singleNode = new SingleNode(url, { createdTime: now })
 
     const out = fs.createWriteStream(singleNode.logFileName, { flags: 'a+' })
     Readable.from(cuttingLine).pipe(out)
