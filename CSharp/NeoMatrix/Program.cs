@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using NeoMatrix.HostedServices;
 
 namespace NeoMatrix
 {
@@ -25,7 +24,7 @@ namespace NeoMatrix
             })
             .ConfigureServices((hostContext, services) =>
             {
-                services.AddHostedService<RpcCheckHostedService>();
+                services.AddAppModule(hostContext.Configuration);
             });
     }
 }

@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using NeoMatrix.Data.Models;
 
 namespace NeoMatrix.HostedServices
 {
@@ -14,18 +13,24 @@ namespace NeoMatrix.HostedServices
         private readonly ILogger _logger;
         private readonly IConfiguration _configuration;
 
+        private readonly NodeCaller _caller;
+
+        private readonly ConcurrentDictionary<string, NodeCache> _cache = new ConcurrentDictionary<string, NodeCache>();
+
         public RpcCheckHostedService(IConfiguration configuration,
-            ILogger<RpcCheckHostedService> logger)
+            ILogger<RpcCheckHostedService> logger,
+            NodeCaller caller)
         {
             _configuration = configuration;
             _logger = logger;
+
+            _caller = caller;
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
-            string a = _configuration.GetValue<string>("Test");
-            _logger.LogInformation(a);
-            return Task.CompletedTask;
+            var node = new Node() { Url = "http://seed1.ngd.network:20332" };
+            await _caller.ExecuteAsync(node);
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
