@@ -17,6 +17,9 @@ namespace NeoMatrix.Validation
         IValidatePipelineBuilder Use(IHttpContentValidator validator);
     }
 
+    /// <summary>
+    /// WARNING: For concurrently use, every Use() should return a new instance of IValidatePipelineBuilder
+    /// </summary>
     public interface IValidatePipelineBuilder
     {
         IValidatePipelineBuilder UseJsonTextValidator<T>() where T : IJsonTextValidator, new();

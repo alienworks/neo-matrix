@@ -42,12 +42,16 @@ namespace NeoMatrix
             var result = new NodeCache();
             var tasks = _rpcMethods.AsParallel().Select(async m =>
             {
+                IValidatePipeline pipeline;
                 if (m.ResultType != ResultTypeEnum.None)
                 {
                     var resultValidator = ValidatorUtility.GetCachedValidator(m.ResultType);
-                    _pipelineBuilder.Use(resultValidator);
+                    pipeline = _pipelineBuilder.Use(resultValidator).Build();
                 }
-                var pipeline = _pipelineBuilder.Build();
+                else
+                {
+                    pipeline = _pipelineBuilder.Build();
+                }
                 var r = await pipeline.ValidateAsync(async () =>
                   {
                       var body = new RpcRequestBody(m.Name)
