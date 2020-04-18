@@ -63,7 +63,7 @@ namespace NeoMatrix
                       string bodyStr = JsonSerializer.Serialize(body, jsonSerializerOptions);
                       var httpContent = new StringContent(bodyStr, Encoding.UTF8, "application/json");
                       return await client.PostAsync(string.Empty, httpContent);
-                  });
+                  }, m.Result);
                 result.MethodsResult.TryAdd(m.Name, r);
             });
             await Task.WhenAll(tasks);

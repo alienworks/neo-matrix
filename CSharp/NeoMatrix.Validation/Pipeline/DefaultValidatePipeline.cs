@@ -13,7 +13,7 @@ namespace NeoMatrix.Validation.Pipeline
 
         public LinkedList<IJsonTextValidator> TextValidators { get; internal set; }
 
-        public async Task<ValidateResult<bool>> ValidateAsync(Func<Task<HttpResponseMessage>> request)
+        public async Task<ValidateResult<bool>> ValidateAsync(Func<Task<HttpResponseMessage>> request, string word = null)
         {
             var connResult = await ConnectionValidator.ValidateAsync(request);
             if (!connResult.OK)
