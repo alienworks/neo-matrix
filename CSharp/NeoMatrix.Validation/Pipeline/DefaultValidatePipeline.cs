@@ -25,9 +25,10 @@ namespace NeoMatrix.Validation.Pipeline
             {
                 return contentResult.ToBooleanValidateResult();
             }
+            using var jsonDoc = contentResult.Result;
             foreach (var tv in TextValidators)
             {
-                var textResult = tv.Validate(contentResult.Result);
+                var textResult = tv.Validate(jsonDoc);
                 if (!textResult.Result)
                 {
                     return textResult;

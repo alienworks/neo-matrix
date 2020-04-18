@@ -23,7 +23,7 @@ namespace NeoMatrix.Validation
 
         IValidatePipelineBuilder Use(IJsonTextValidator validator);
 
-        IValidatePipelineBuilder Use(Func<JsonDocument, ValidateResult<bool>> validateFunc);
+        IValidatePipelineBuilder Use(Func<JsonDocument, string, ValidateResult<bool>> validateFunc);
 
         IValidatePipeline Build();
     }

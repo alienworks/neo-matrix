@@ -6,7 +6,7 @@ namespace NeoMatrix.Validation.Validators
     {
         public string VersionText { get; set; } = "2.0";
 
-        public ValidateResult<bool> Validate(JsonDocument doc)
+        public ValidateResult<bool> Validate(JsonDocument doc, string _)
         {
             var root = doc.RootElement;
             if (!root.TryGetProperty("jsonrpc", out var jsonrpc))

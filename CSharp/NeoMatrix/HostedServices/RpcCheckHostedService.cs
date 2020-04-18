@@ -30,7 +30,8 @@ namespace NeoMatrix.HostedServices
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             var node = new Node() { Url = "http://seed1.ngd.network:20332" };
-            await _caller.ExecuteAsync(node);
+            var nodeCache = await _caller.ExecuteAsync(node);
+            _cache.TryAdd(node.Url, nodeCache);
         }
 
         public Task StopAsync(CancellationToken cancellationToken)

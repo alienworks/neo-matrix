@@ -9,6 +9,7 @@ using NeoMatrix.Configuration;
 using NeoMatrix.Data.Models;
 using NeoMatrix.Rpc;
 using NeoMatrix.Validation;
+using NeoMatrix.Validation.Validators;
 
 namespace NeoMatrix
 {
@@ -38,10 +39,15 @@ namespace NeoMatrix
         {
             var client = _clientFactory.CreateClient();
             client.BaseAddress = new Uri(node.Url);
-            var pipeline = _pipelineBuilder.Build();
             var result = new NodeCache();
             var tasks = _rpcMethods.AsParallel().Select(async m =>
             {
+                if (m.ResultType != ResultTypeEnum.None)
+                {
+                    var resultValidator = ValidatorUtility.GetCachedValidator(m.ResultType);
+                    _pipelineBuilder.Use(resultValidator);
+                }
+                var pipeline = _pipelineBuilder.Build();
                 var r = await pipeline.ValidateAsync(async () =>
                   {
                       var body = new RpcRequestBody(m.Name)
@@ -54,7 +60,7 @@ namespace NeoMatrix
                       var httpContent = new StringContent(bodyStr, Encoding.UTF8, "application/json");
                       return await client.PostAsync(string.Empty, httpContent);
                   });
-                result.MethodsResult.GetOrAdd(m.Name, r);
+                result.MethodsResult.TryAdd(m.Name, r);
             });
             await Task.WhenAll(tasks);
             return result;

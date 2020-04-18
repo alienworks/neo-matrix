@@ -67,7 +67,7 @@ namespace NeoMatrix.Validation.Pipeline.Builders
             return Use(new T());
         }
 
-        public IValidatePipelineBuilder Use(Func<JsonDocument, ValidateResult<bool>> validateFunc)
+        public IValidatePipelineBuilder Use(Func<JsonDocument, string, ValidateResult<bool>> validateFunc)
         {
             var validator = ValidatorUtility.FromDelegate(validateFunc);
             return Use(validator);
