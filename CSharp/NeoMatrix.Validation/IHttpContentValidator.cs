@@ -1,9 +1,10 @@
-﻿using System.Threading.Tasks;
+﻿using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace NeoMatrix.Validation
 {
     public interface IHttpContentValidator
     {
-        Task<ValidateResult<string>> ValidateAsync(byte[] content);
+        Task<ValidateResult<JsonDocument>> ValidateAsync(byte[] content);
     }
 }
