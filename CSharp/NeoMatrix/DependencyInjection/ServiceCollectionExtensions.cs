@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using NeoMatrix;
+using NeoMatrix.Configuration;
 using NeoMatrix.HostedServices;
 using NeoMatrix.Validation.Validators;
 
@@ -9,11 +10,16 @@ namespace Microsoft.Extensions.DependencyInjection
     {
         public static void AddAppModule(this IServiceCollection services, IConfiguration configuration)
         {
+            var rpcMethodsConfig = configuration.GetSection("rpcMethods");
+            var rpcCommonMethodOption = rpcMethodsConfig.GetSection("common");
+            services.Configure<CommonMethodOption>(rpcCommonMethodOption);
+            services.Configure<RpcMethodOptions>(rpcMethodsConfig);
+
             services.AddHttpClient();
 
             services.AddSingleton<NodeCaller>();
 
-            string rpcVersion = configuration.GetSection("Common").GetValue<string>("jsonrpc");
+            string rpcVersion = rpcCommonMethodOption.GetValue<string>("jsonrpc");
             services.AddValidateModule(builder => builder
                     .UseConnectionValidator<DefaultHttpConnectionValidator>()
                     .UseContentValidator<DefaultHttpContentValidator>()
