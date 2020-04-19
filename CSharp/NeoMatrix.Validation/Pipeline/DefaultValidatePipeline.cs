@@ -13,7 +13,7 @@ namespace NeoMatrix.Validation.Pipeline
 
         public LinkedList<IJsonTextValidator> TextValidators { get; internal set; }
 
-        public async Task<ValidateResult<bool>> ValidateAsync(Func<Task<HttpResponseMessage>> request)
+        public async Task<ValidateResult<bool>> ValidateAsync(Func<Task<HttpResponseMessage>> request, string word = null)
         {
             var connResult = await ConnectionValidator.ValidateAsync(request);
             if (!connResult.OK)
@@ -28,7 +28,7 @@ namespace NeoMatrix.Validation.Pipeline
             using var jsonDoc = contentResult.Result;
             foreach (var tv in TextValidators)
             {
-                var textResult = tv.Validate(jsonDoc);
+                var textResult = tv.Validate(jsonDoc, word);
                 if (!textResult.Result)
                 {
                     return textResult;

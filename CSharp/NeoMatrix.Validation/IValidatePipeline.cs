@@ -6,6 +6,6 @@ namespace NeoMatrix.Validation
 {
     public interface IValidatePipeline
     {
-        Task<ValidateResult<bool>> ValidateAsync(Func<Task<HttpResponseMessage>> request);
+        Task<ValidateResult<bool>> ValidateAsync(Func<Task<HttpResponseMessage>> request, string word = null);
     }
 }
