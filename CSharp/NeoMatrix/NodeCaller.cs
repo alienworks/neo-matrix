@@ -23,13 +23,15 @@ namespace NeoMatrix
 
         private readonly IHttpClientFactory _clientFactory;
         private readonly IValidatePipelineBuilder _pipelineBuilder;
+        private readonly CommonMethodOption _commonOption;
         private readonly RpcMethodOption[] _rpcMethods;
 
-        public NodeCaller(IHttpClientFactory clientFactory, IValidatePipelineBuilder pipelineBuilder, IOptions<RpcMethodOptions> methodOptions)
+        public NodeCaller(IHttpClientFactory clientFactory, IValidatePipelineBuilder pipelineBuilder, IOptions<CommonMethodOption> commonOption, IOptions<RpcMethodOptions> methodOptions)
         {
-            // _rpcMethods = methodOptions.Value?.Items ?? throw new ArgumentNullException(nameof(RpcMethodOptions));
+            _commonOption = commonOption.Value ?? throw new ArgumentNullException(nameof(CommonMethodOption));
+            _rpcMethods = methodOptions.Value?.Items ?? throw new ArgumentNullException(nameof(RpcMethodOptions));
 
-            _rpcMethods = new RpcMethodOption[] { new RpcMethodOption() { Name = "getblocksysfee", Params = new object[] { 1005434 } } };
+            // _rpcMethods = new RpcMethodOption[] { new RpcMethodOption() { Name = "getblocksysfee", Params = new object[] { 1005434 } } };
 
             _clientFactory = clientFactory;
             _pipelineBuilder = pipelineBuilder;
@@ -56,14 +58,14 @@ namespace NeoMatrix
                   {
                       var body = new RpcRequestBody(m.Name)
                       {
-                          JsonRpc = "2.0",
-                          Params = m.Params,
+                          JsonRpc = _commonOption.Jsonrpc,
+                          Params = m.Params ?? Array.Empty<object>(),
                           Id = 1
                       };
                       string bodyStr = JsonSerializer.Serialize(body, jsonSerializerOptions);
                       var httpContent = new StringContent(bodyStr, Encoding.UTF8, "application/json");
                       return await client.PostAsync(string.Empty, httpContent);
-                  }, m.Result);
+                  }, m.Result ?? string.Empty);
                 result.MethodsResult.TryAdd(m.Name, r);
             });
             await Task.WhenAll(tasks);
