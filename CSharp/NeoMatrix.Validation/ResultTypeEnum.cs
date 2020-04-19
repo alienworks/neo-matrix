@@ -9,7 +9,8 @@
         String = 3,
         True = 4,
         False = 5,
-        Object = 6,
+        Boolean = 6,
+        Object = 7,
 
         KeyValuePair = 11,
         Key = 12,

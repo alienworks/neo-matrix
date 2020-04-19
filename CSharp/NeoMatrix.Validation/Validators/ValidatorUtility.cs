@@ -11,8 +11,9 @@ namespace NeoMatrix.Validation.Validators
             { ResultTypeEnum.None, FromDelegate((doc, _) => new ValidateResult<bool>(){ Result = true }) },
             { ResultTypeEnum.Number, FromDelegate(ValidateByNumber)},
 
-            { ResultTypeEnum.True, FromDelegate((doc, _) => ValidateByBoolean(doc, true)) },
-            { ResultTypeEnum.False, FromDelegate((doc, _) => ValidateByBoolean(doc, false)) },
+            { ResultTypeEnum.True, FromDelegate((doc, _) => ValidateByBooleanValue(doc, true)) },
+            { ResultTypeEnum.False, FromDelegate((doc, _) => ValidateByBooleanValue(doc, false)) },
+            { ResultTypeEnum.Boolean, FromDelegate(ValidateByBoolean) },
 
             { ResultTypeEnum.Key, FromDelegate(ValidateByKeyOnly) },
         };
@@ -32,15 +33,25 @@ namespace NeoMatrix.Validation.Validators
         {
             return doc.RootElement.ValueKind == JsonValueKind.Number
                  ? new ValidateResult<bool>() { Result = true }
-                 : new ValidateResult<bool>() { Result = false, ExtraErrorMsg = $"Invalid JsonValueKind: {doc.RootElement.ValueKind}" };
+                 : new ValidateResult<bool>() { Result = false, ExtraErrorMsg = $"Invalid JsonValueKind: {doc.RootElement.ValueKind}. Should be Number" };
         }
 
-        private static ValidateResult<bool> ValidateByBoolean(JsonDocument doc, bool value)
+        private static ValidateResult<bool> ValidateByBoolean(JsonDocument doc, string _)
+        {
+            var root = doc.RootElement;
+            if (root.ValueKind != JsonValueKind.False && root.ValueKind != JsonValueKind.True)
+            {
+                return new ValidateResult<bool>() { Result = false, ExtraErrorMsg = $"Invalid JsonValueKind: {root.ValueKind}. Should be Boolean" };
+            }
+            return new ValidateResult<bool>() { Result = true };
+        }
+
+        private static ValidateResult<bool> ValidateByBooleanValue(JsonDocument doc, bool value)
         {
             var root = doc.RootElement;
             if ((value && root.ValueKind == JsonValueKind.False) || (!value && root.ValueKind == JsonValueKind.True))
             {
-                return new ValidateResult<bool>() { Result = false, ExtraErrorMsg = $"Bool Value Not Matched: {root.ValueKind}" };
+                return new ValidateResult<bool>() { Result = false, ExtraErrorMsg = $"Bool Value Not Matched: {root.ValueKind}. Should be '{value}'" };
             }
             return new ValidateResult<bool>() { Result = true };
         }
