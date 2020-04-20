@@ -1,7 +1,10 @@
 ﻿using System.IO;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using NeoMatrix.Caches;
+using NeoMatrix.Data;
 
 namespace NeoMatrix
 {
@@ -33,6 +36,11 @@ namespace NeoMatrix
             .ConfigureServices((hostContext, services) =>
             {
                 services.AddAppModule(hostContext.Configuration);
+                services.AddDbContext<MatrixDbContext>(options => {
+                    options.UseMySql(hostContext.Configuration.GetConnectionString("defaultConnection"));
+                });
+                services.AddScoped<INodeCache, NodeCache>();
+                services.AddScoped<IValidationsCache, ValidationsCache>();
             });
     }
 }

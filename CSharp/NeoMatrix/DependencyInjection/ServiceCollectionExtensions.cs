@@ -10,16 +10,13 @@ namespace Microsoft.Extensions.DependencyInjection
     {
         public static void AddAppModule(this IServiceCollection services, IConfiguration configuration)
         {
-            var rpcMethodsConfig = configuration.GetSection("rpcMethods");
-            var rpcCommonMethodOption = rpcMethodsConfig.GetSection("common");
-            services.Configure<CommonMethodOption>(rpcCommonMethodOption);
-            services.Configure<RpcMethodOptions>(rpcMethodsConfig);
+            services.Configure<ConfigurationOption>(configuration);
 
             services.AddHttpClient();
 
             services.AddSingleton<NodeCaller>();
 
-            string rpcVersion = rpcCommonMethodOption.GetValue<string>("jsonrpc");
+            string rpcVersion = configuration.GetSection("rpcMethods").GetSection("common").GetValue<string>("jsonrpc");
             services.AddValidateModule(builder => builder
                     .UseConnectionValidator<DefaultHttpConnectionValidator>()
                     .UseContentValidator<DefaultHttpContentValidator>()

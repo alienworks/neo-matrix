@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
+using NeoMatrix.Caches;
 using NeoMatrix.Configuration;
 using NeoMatrix.Data.Models;
 using NeoMatrix.Rpc;
@@ -25,11 +27,26 @@ namespace NeoMatrix
         private readonly IValidatePipelineBuilder _pipelineBuilder;
         private readonly CommonMethodOption _commonOption;
         private readonly RpcMethodOption[] _rpcMethods;
+        private readonly int[] _indexesOption;
+        private readonly IValidationsCache _validationsCache;
 
-        public NodeCaller(IHttpClientFactory clientFactory, IValidatePipelineBuilder pipelineBuilder, IOptions<CommonMethodOption> commonOption, IOptions<RpcMethodOptions> methodOptions)
+        public NodeCaller(
+            IHttpClientFactory clientFactory,
+            IValidatePipelineBuilder pipelineBuilder,
+            IValidationsCache validationsCache,
+            IOptions<ConfigurationOption> option)
         {
-            _commonOption = commonOption.Value ?? throw new ArgumentNullException(nameof(CommonMethodOption));
-            _rpcMethods = methodOptions.Value?.Items ?? throw new ArgumentNullException(nameof(RpcMethodOptions));
+            _indexesOption = option.Value.Indexes;
+            _commonOption = option.Value.RpcMethods.Common ?? throw new ArgumentNullException(nameof(CommonMethodOption));
+            _validationsCache = validationsCache;
+            _rpcMethods = option.Value.RpcMethods.Items.ToList()
+                .Where((_, i) => _indexesOption.Any(index => index == i))
+                .Select(method =>
+                {
+                    method.Name = method.Name.ToLower();
+                    return method;
+                }).ToArray() 
+                ?? throw new ArgumentNullException(nameof(RpcMethodOptions));
 
             // _rpcMethods = new RpcMethodOption[] { new RpcMethodOption() { Name = "getblocksysfee", Params = new object[] { 1005434 } } };
 
@@ -37,12 +54,12 @@ namespace NeoMatrix
             _pipelineBuilder = pipelineBuilder;
         }
 
-        public async Task<NodeCache> ExecuteAsync(Node node)
+        public async Task<Node> ExecuteAsync(Node node)
         {
             var client = _clientFactory.CreateClient();
             client.BaseAddress = new Uri(node.Url);
-            var result = new NodeCache();
-            var tasks = _rpcMethods.AsParallel().Select(async m =>
+            
+            var tasks = _rpcMethods.Select(async m =>
             {
                 IValidatePipeline pipeline;
                 if (m.ResultType != ResultTypeEnum.None)
@@ -66,10 +83,18 @@ namespace NeoMatrix
                       var httpContent = new StringContent(bodyStr, Encoding.UTF8, "application/json");
                       return await client.PostAsync(string.Empty, httpContent);
                   }, m.Result ?? string.Empty);
-                result.MethodsResult.TryAdd(m.Name, r);
+
+                await _validationsCache.CreateAsync(new ValidationResult
+                {
+                    Name = m.Name,
+                    OK = r.OK,
+                    ExtraErrorMsg = r.ExtraErrorMsg,
+                    Url = node.Url,
+                    Result = r.Result
+                });
             });
             await Task.WhenAll(tasks);
-            return result;
+            return node;
         }
     }
 }
