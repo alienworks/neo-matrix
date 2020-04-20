@@ -6,6 +6,7 @@ namespace NeoMatrix.Configuration
 {
     public sealed class RpcMethodOptions
     {
+        public CommonMethodOption Common { get; set; }
         public RpcMethodOption[] Items { get; set; }
     }
 }
