@@ -17,6 +17,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
             services.AddHttpClient();
 
+            services.AddSingleton<NodeSeedsLoader>();
             services.AddSingleton<NodeCaller>();
 
             string rpcVersion = rpcCommonMethodOption.GetValue<string>("jsonrpc");
