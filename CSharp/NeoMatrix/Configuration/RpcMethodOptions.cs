@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace NeoMatrix.Configuration
+﻿namespace NeoMatrix.Configuration
 {
     public sealed class RpcMethodOptions
     {
+        public int[] Indexes { get; set; }
+
         public RpcMethodOption[] Items { get; set; }
     }
 }
