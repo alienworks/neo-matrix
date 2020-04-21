@@ -39,8 +39,7 @@ namespace NeoMatrix
                 services.AddDbContext<MatrixDbContext>(options => {
                     options.UseMySql(hostContext.Configuration.GetConnectionString("defaultConnection"));
                 });
-                services.AddScoped<INodeCache, NodeCache>();
-                services.AddScoped<IValidationsCache, ValidationsCache>();
+                services.AddScoped<IMatrixCache, MatrixCache>();
             });
     }
 }

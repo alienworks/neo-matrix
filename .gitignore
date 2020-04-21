@@ -369,3 +369,4 @@ output
 *.csv#
 *.xlsx
 *.xlsx#
+/CSharp/NeoMatrix.Data/Migrations

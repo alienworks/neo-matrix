@@ -28,17 +28,17 @@ namespace NeoMatrix
         private readonly CommonMethodOption _commonOption;
         private readonly RpcMethodOption[] _rpcMethods;
         private readonly int[] _indexesOption;
-        private readonly IValidationsCache _validationsCache;
+        private readonly IMatrixCache _matrixCache;
 
         public NodeCaller(
             IHttpClientFactory clientFactory,
             IValidatePipelineBuilder pipelineBuilder,
-            IValidationsCache validationsCache,
+            IMatrixCache matrixCache,
             IOptions<ConfigurationOption> option)
         {
             _indexesOption = option.Value.Indexes;
             _commonOption = option.Value.RpcMethods.Common ?? throw new ArgumentNullException(nameof(CommonMethodOption));
-            _validationsCache = validationsCache;
+            _matrixCache = matrixCache;
             _rpcMethods = option.Value.RpcMethods.Items.ToList()
                 .Where((_, i) => _indexesOption.Any(index => index == i))
                 .Select(method =>
@@ -84,7 +84,7 @@ namespace NeoMatrix
                       return await client.PostAsync(string.Empty, httpContent);
                   }, m.Result ?? string.Empty);
 
-                await _validationsCache.CreateAsync(new ValidationResult
+                await _matrixCache.CreateValidationAsync(new ValidationResult
                 {
                     Name = m.Name,
                     OK = r.OK,
@@ -95,6 +95,34 @@ namespace NeoMatrix
             });
             await Task.WhenAll(tasks);
             return node;
+        }
+
+        public async Task<NodePlugin[]> GetPluginsAsync(Node node)
+        {
+            var client = _clientFactory.CreateClient();
+            client.BaseAddress = new Uri(node.Url);
+
+            var body = new RpcRequestBody("listplugins") { 
+                JsonRpc = _commonOption.Jsonrpc, 
+                Params = Array.Empty<object>(), 
+                Id = 1 
+            };
+
+            string bodyStr = JsonSerializer.Serialize(body, jsonSerializerOptions);
+            var httpContent = new StringContent(bodyStr, Encoding.UTF8, "application/json");
+
+            var response = await client.PostAsync(string.Empty, httpContent);
+
+            var rspStream = await response.Content.ReadAsStreamAsync();
+
+            var repBody = await JsonSerializer.DeserializeAsync<RpcResponseBody<IEnumerable<NodePlugin>>>(rspStream);
+
+            foreach (var b in repBody.Result)
+            {
+                Console.WriteLine(b.Id);
+            }
+
+            return default;
         }
     }
 }
