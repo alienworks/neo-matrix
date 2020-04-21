@@ -25,7 +25,7 @@ namespace NeoMatrix.Validation.Validators
             ? new ValidateResult<bool>() { Result = true }
             : new ValidateResult<bool>() { Result = false, ExtraErrorMsg = "Property 'result' Not Found." };
 
-        private static bool ExistsResultProperty(JsonDocument doc, out JsonElement value) => !doc.RootElement.TryGetProperty("result", out value);
+        private static bool ExistsResultProperty(JsonDocument doc, out JsonElement value) => doc.RootElement.TryGetProperty("result", out value);
 
         public static IJsonTextValidator FromDelegate(Func<JsonDocument, string, ValidateResult<bool>> func) => new WrappedTextValidator(func);
 
