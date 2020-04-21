@@ -29,9 +29,9 @@ namespace NeoMatrix
         public NodeCaller(IHttpClientFactory clientFactory, IValidatePipelineBuilder pipelineBuilder, IOptions<CommonMethodOption> commonOption, IOptions<RpcMethodOptions> methodOptions)
         {
             _commonOption = commonOption.Value ?? throw new ArgumentNullException(nameof(CommonMethodOption));
-            _rpcMethods = methodOptions.Value?.Items ?? throw new ArgumentNullException(nameof(RpcMethodOptions));
-
-            // _rpcMethods = new RpcMethodOption[] { new RpcMethodOption() { Name = "getblocksysfee", Params = new object[] { 1005434 } } };
+            var allRpcMethods = methodOptions.Value?.Items ?? throw new ArgumentNullException(nameof(RpcMethodOptions));
+            var indexes = methodOptions.Value.Indexes ?? throw new ArgumentNullException(nameof(RpcMethodOptions) + '_' + nameof(RpcMethodOptions.Indexes));
+            _rpcMethods = indexes.Select(i => allRpcMethods[i]).ToArray();
 
             _clientFactory = clientFactory;
             _pipelineBuilder = pipelineBuilder;
@@ -41,6 +41,7 @@ namespace NeoMatrix
         {
             var client = _clientFactory.CreateClient();
             client.BaseAddress = new Uri(node.Url);
+            client.Timeout = TimeSpan.FromMilliseconds(_commonOption.Timeout);
             var result = new NodeCache();
             var tasks = _rpcMethods.AsParallel().Select(async m =>
             {
@@ -56,11 +57,11 @@ namespace NeoMatrix
                 }
                 var r = await pipeline.ValidateAsync(async () =>
                   {
-                      var body = new RpcRequestBody(m.Name)
+                      var body = new RpcRequestBody(m.Name.ToLower())
                       {
                           JsonRpc = _commonOption.Jsonrpc,
                           Params = m.Params ?? Array.Empty<object>(),
-                          Id = 1
+                          Id = _commonOption.Id
                       };
                       string bodyStr = JsonSerializer.Serialize(body, jsonSerializerOptions);
                       var httpContent = new StringContent(bodyStr, Encoding.UTF8, "application/json");
