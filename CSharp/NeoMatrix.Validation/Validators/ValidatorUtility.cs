@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json;
 
 namespace NeoMatrix.Validation.Validators
@@ -22,11 +21,11 @@ namespace NeoMatrix.Validation.Validators
             { ResultTypeEnum.KeyValuePair, FromDelegate(ValidateByKeyValuePair) },
         };
 
-        private static ValidateResult<bool> ValidateByNone(JsonDocument doc, string _) => CheckResult(doc, out var __)
+        private static ValidateResult<bool> ValidateByNone(JsonDocument doc, string _) => ExistsResultProperty(doc, out var _)
             ? new ValidateResult<bool>() { Result = true }
             : new ValidateResult<bool>() { Result = false, ExtraErrorMsg = "Property 'result' Not Found." };
 
-        private static bool CheckResult(JsonDocument doc, out JsonElement value) => !doc.RootElement.TryGetProperty("result", out value);
+        private static bool ExistsResultProperty(JsonDocument doc, out JsonElement value) => !doc.RootElement.TryGetProperty("result", out value);
 
         public static IJsonTextValidator FromDelegate(Func<JsonDocument, string, ValidateResult<bool>> func) => new WrappedTextValidator(func);
 
@@ -39,14 +38,13 @@ namespace NeoMatrix.Validation.Validators
             return validator;
         }
 
-
         private static ValidateResult<bool> ValidateByNumber(JsonDocument doc, string _)
         {
-            if (!CheckResult(doc, out var resultElement))
+            if (!ExistsResultProperty(doc, out var resultElement))
             {
                 return new ValidateResult<bool>() { Result = false, ExtraErrorMsg = "Property 'result' Not Found." };
             }
-            
+
             return resultElement.ValueKind == JsonValueKind.Number
                  ? new ValidateResult<bool>() { Result = true }
                  : new ValidateResult<bool>() { Result = false, ExtraErrorMsg = $"Invalid JsonValueKind: {resultElement.ValueKind}. Should be Number" };
@@ -54,7 +52,7 @@ namespace NeoMatrix.Validation.Validators
 
         private static ValidateResult<bool> ValidateByArray(JsonDocument doc, string _)
         {
-            if (!CheckResult(doc, out var resultElement))
+            if (!ExistsResultProperty(doc, out var resultElement))
             {
                 return new ValidateResult<bool>() { Result = false, ExtraErrorMsg = "Property 'result' Not Found." };
             }
@@ -66,7 +64,7 @@ namespace NeoMatrix.Validation.Validators
 
         private static ValidateResult<bool> ValidateByString(JsonDocument doc, string value)
         {
-            if (!CheckResult(doc, out var resultElement))
+            if (!ExistsResultProperty(doc, out var resultElement))
             {
                 return new ValidateResult<bool>() { Result = false, ExtraErrorMsg = "Property 'result' Not Found." };
             }
@@ -86,7 +84,7 @@ namespace NeoMatrix.Validation.Validators
 
         private static ValidateResult<bool> ValidateByBoolean(JsonDocument doc, string _)
         {
-            if (!CheckResult(doc, out var resultElement))
+            if (!ExistsResultProperty(doc, out var resultElement))
             {
                 return new ValidateResult<bool>() { Result = false, ExtraErrorMsg = "Property 'result' Not Found." };
             }
@@ -100,11 +98,11 @@ namespace NeoMatrix.Validation.Validators
 
         private static ValidateResult<bool> ValidateByBooleanValue(JsonDocument doc, bool value)
         {
-            if (!CheckResult(doc, out var resultElement))
+            if (!ExistsResultProperty(doc, out var resultElement))
             {
                 return new ValidateResult<bool>() { Result = false, ExtraErrorMsg = "Property 'result' Not Found." };
             }
-            
+
             if ((value && resultElement.ValueKind == JsonValueKind.False) || (!value && resultElement.ValueKind == JsonValueKind.True))
             {
                 return new ValidateResult<bool>() { Result = false, ExtraErrorMsg = $"Bool Value Not Matched: {resultElement.ValueKind}. Should be '{value}'" };
@@ -114,42 +112,46 @@ namespace NeoMatrix.Validation.Validators
 
         private static ValidateResult<bool> ValidateByKeyOnly(JsonDocument doc, string word)
         {
-            if (!CheckResult(doc, out var resultElement))
+            if (!ExistsResultProperty(doc, out var resultElement))
             {
                 return new ValidateResult<bool>() { Result = false, ExtraErrorMsg = "Property 'result' Not Found." };
             }
 
             if (!resultElement.TryGetProperty(word, out var _))
             {
-                return new ValidateResult<bool>() { Result = false, ExtraErrorMsg = $"Property {word} Not Found" };
+                return new ValidateResult<bool>() { Result = false, ExtraErrorMsg = $"Property '{word}' Not Found" };
             }
             return new ValidateResult<bool>() { Result = true };
         }
 
-        private static ValidateResult<bool> ValidateByKeyValuePair(JsonDocument doc, string pair)
+        private static ValidateResult<bool> ValidateByKeyValuePair(JsonDocument doc, string word)
         {
-            if (!CheckResult(doc, out var resultElement))
+            if (!ExistsResultProperty(doc, out var resultElement))
             {
                 return new ValidateResult<bool>() { Result = false, ExtraErrorMsg = "Property 'result' Not Found." };
             }
-            
-            var pairArray = pair.Split(":").Select(w => w.Replace(";", "")).ToArray();
 
-            for (var i = 0; i < pairArray.Count(); i += 2)
+            string[] pairs = word.Split(';', StringSplitOptions.RemoveEmptyEntries);
+            foreach (string pair in pairs)
             {
-                string key = pairArray[i];
-                string value = pairArray[i + 1];
+                string[] keyvalue = pair.Split(':', StringSplitOptions.RemoveEmptyEntries);
+                if (keyvalue.Length != 2)
+                {
+                    continue;
+                }
+                string key = keyvalue[0].Trim();
                 if (!resultElement.TryGetProperty(key, out var element))
                 {
                     return new ValidateResult<bool>() { Result = false, ExtraErrorMsg = $"Property {key} Can't be Found." };
                 }
-                
-                var resultValue = element.GetString();
-                if (resultValue != value)
+                string value = keyvalue[1].Trim();
+                string elementValue = element.GetString()?.Trim();
+                if (elementValue != value)
                 {
-                    return new ValidateResult<bool>() {
+                    return new ValidateResult<bool>()
+                    {
                         Result = false,
-                        ExtraErrorMsg = $"Property Value Not Match: {resultValue}. Should be '{value}'"
+                        ExtraErrorMsg = $"Property Value Not Match: {elementValue}. Should be '{value}'"
                     };
                 }
             }
