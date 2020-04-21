@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using NeoMatrix.Rpc;
 using NeoMatrix.Validation;
 
 namespace NeoMatrix
