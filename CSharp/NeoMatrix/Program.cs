@@ -1,5 +1,4 @@
-﻿using System.IO;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -33,6 +32,7 @@ namespace NeoMatrix
             .ConfigureServices((hostContext, services) =>
             {
                 services.AddAppModule(hostContext.Configuration);
+                services.AddDataModule(hostContext.Configuration);
             });
     }
 }
