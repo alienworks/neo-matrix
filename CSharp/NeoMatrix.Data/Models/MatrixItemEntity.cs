@@ -4,7 +4,7 @@ namespace NeoMatrix.Data.Models
 {
     public sealed class MatrixItemEntity
     {
-        public int Id { get; set; }
+        public long Id { get; set; }
 
         public string Url { get; set; }
 
@@ -16,7 +16,7 @@ namespace NeoMatrix.Data.Models
 
         public string Error { get; set; }
 
-        public int GroupId { get; set; }
+        public long GroupId { get; set; }
 
         public DateTime CreateTime { get; set; }
     }

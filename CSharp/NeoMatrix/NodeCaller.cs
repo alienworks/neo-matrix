@@ -42,7 +42,7 @@ namespace NeoMatrix
             var client = _clientFactory.CreateClient();
             client.BaseAddress = new Uri(node.Url);
             client.Timeout = TimeSpan.FromMilliseconds(_commonOption.Timeout);
-            var result = new NodeCache();
+            var result = new NodeCache(node);
             var tasks = _rpcMethods.AsParallel().Select(async m =>
             {
                 IValidatePipeline pipeline;

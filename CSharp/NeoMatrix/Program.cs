@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using System;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -6,11 +8,14 @@ namespace NeoMatrix
 {
     internal class Program
     {
-        // private static IConfiguration _appConfig;
-
-        private static void Main(string[] args)
+        private async static Task Main(string[] args)
         {
-            CreateHostBuilder(args).Build().Run();
+            var hostBuilder = CreateHostBuilder(args);
+            hostBuilder.UseConsoleLifetime();
+            using var host = hostBuilder.Build();
+            await host.StartAsync();
+            // Console.ReadKey();
+            await host.StopAsync();
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
@@ -26,8 +31,6 @@ namespace NeoMatrix
                 {
                     configBuilder.AddCommandLine(args);
                 }
-
-                // _appConfig = configBuilder.Build();
             })
             .ConfigureServices((hostContext, services) =>
             {
