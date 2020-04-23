@@ -27,13 +27,15 @@ namespace NeoMatrix.Validation
             {
                 sb.Append("Exp:");
                 sb.Append(ex.Message);
+
+                while (ex.InnerException != null)
+                {
+                    ex = ex.InnerException;
+                    sb.Append('/');
+                    sb.Append(ex.Message);
+                }
             }
-            while (ex.InnerException != null)
-            {
-                ex = ex.InnerException;
-                sb.Append('/');
-                sb.Append(ex.Message);
-            }
+            
             if (!string.IsNullOrEmpty(ExtraErrorMsg))
             {
                 sb.Append("|Extra:");
