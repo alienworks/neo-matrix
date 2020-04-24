@@ -2,8 +2,10 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NeoMatrix.Data;
@@ -83,12 +85,34 @@ namespace NeoMatrix.HostedServices
             }
             await _dbContext.MatrixItems.AddRangeAsync(entities, cancellationToken);
             await _dbContext.SaveChangesAsync(cancellationToken);
+            long deletedMaxId = await CheckDeleteOldestGroupAsync(groupId, cancellationToken);
+            if (deletedMaxId >= 1000_000_000)
+            {
+                await _dbContext.Database.ExecuteSqlRawAsync($"ALTER TABLE `{nameof(_dbContext.MatrixItems)}` AUTO_INCREMENT = 1;", cancellationToken);
+            }
+            _dbContext.Dispose();
         }
 
         private static long CreateGroupId()
         {
             DateTime now = DateTime.Now;
             return now.Year * 10000000000L + now.Month * 100000000 + now.Day * 1000000 + now.Hour * 10000 + now.Minute * 100 + now.Second;
+        }
+
+        private async Task<long> CheckDeleteOldestGroupAsync(long currentGroupId, CancellationToken token)
+        {
+            long minGroupId = await _dbContext.MatrixItems.MinAsync(p => p.GroupId, token);
+            if (minGroupId != currentGroupId)
+            {
+                var oldItems = await _dbContext.MatrixItems.Where(p => p.GroupId == minGroupId).ToArrayAsync(token);
+                if (oldItems.Length > 0)
+                {
+                    _dbContext.MatrixItems.RemoveRange(oldItems);
+                    await _dbContext.SaveChangesAsync(token);
+                    return oldItems.Max(e => e.Id);
+                }
+            }
+            return 0;
         }
     }
 }
