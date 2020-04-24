@@ -15,6 +15,7 @@ interface SingleNodeResponse {
 
 interface SingleNodeConfig {
     transformer?: () => any
+    createdTime?: number
 }
 
 // Helper functions
@@ -26,8 +27,8 @@ function pad(n: number) {
     return n.toString().padStart(2, '0')
 }
 
-function currentTime() {
-    const now = new Date()
+function formatTime(time?: number) {
+    let now = time ? new Date(time) : new Date()
 
     return now.getFullYear() +
         '-' + pad( now.getMonth() + 1 ) +
@@ -39,8 +40,8 @@ function currentTime() {
         'Z'
 }
 
-function createLogFile() {
-    return `${currentTime()}-error.log`
+function createLogFile(time?: number) {
+    return `${formatTime(time)}-error.log`
 }
 
 
@@ -61,14 +62,16 @@ export class SingleNode {
 
     private retryTime = initialRetryTime
 
-    constructor(url: string, config: SingleNodeConfig = {}) {
+    constructor(url: string, config: SingleNodeConfig = { createdTime: Date.now() }) {
         this.client = new MatrixRPC(url)
-        this.logFileName = createLogFile()
+        this.logFileName = createLogFile(config.createdTime)
     }
 
     private async catchWrapper(method: Function, ...args: any[]): Promise<SingleNodeResponse> {
         try {
-            const result = args && args.length ? await method.apply(this.client, args) : await method.apply(this.client)
+            const result = (args && args.length) 
+                ? await method.apply(this.client, args) 
+                : await method.apply(this.client)
 
             const message = `[MATRIX REQUEST SUCCEEDED] ${method.name} - ${this.client.net}\n`
             console.log(message)
