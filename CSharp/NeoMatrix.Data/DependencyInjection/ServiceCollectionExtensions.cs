@@ -12,6 +12,7 @@ namespace Microsoft.Extensions.DependencyInjection
             {
                 opt.UseMySql(configuration.GetConnectionString("DefaultConnection"));
             });
+            services.AddSingleton<RedisService>();
         }
     }
 }

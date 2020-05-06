@@ -3,6 +3,8 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using NeoMatrix.Data;
 
 namespace NeoMatrix
 {
@@ -13,9 +15,13 @@ namespace NeoMatrix
             var hostBuilder = CreateHostBuilder(args);
             hostBuilder.UseConsoleLifetime();
             using var host = hostBuilder.Build();
-            await host.StartAsync();
-            // Console.ReadKey();
-            await host.StopAsync();
+
+            using var serviceScope = host.Services.CreateScope();
+            var services = serviceScope.ServiceProvider;
+            var redisService = services.GetRequiredService<RedisService>();
+            redisService.Connect();
+
+            await StartMatrixSync(host);
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
@@ -23,8 +29,8 @@ namespace NeoMatrix
             .ConfigureAppConfiguration((hostingContext, configBuilder) =>
             {
                 configBuilder
-                //.SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json");
+                    //.SetBasePath(Directory.GetCurrentDirectory())
+                    .AddJsonFile("appsettings.json");
 
                 configBuilder.AddEnvironmentVariables();
                 if (args != null)
@@ -37,5 +43,20 @@ namespace NeoMatrix
                 services.AddAppModule(hostContext.Configuration);
                 services.AddDataModule(hostContext.Configuration);
             });
+
+        private static async Task StartMatrixSync(IHost host)
+        {
+            await host.StartAsync();
+            await host.StopAsync();
+        }
+
+        private static async Task KeepMatrixSyncing(IHost host)
+        {
+            while (true)
+            {
+                await Task.Delay(10 * 1000);
+                await StartMatrixSync(host);
+            }
+        }
     }
 }

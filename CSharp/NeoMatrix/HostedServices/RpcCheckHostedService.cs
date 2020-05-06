@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using NeoMatrix.Configuration;
 using NeoMatrix.Data;
 using NeoMatrix.Data.Models;
 
@@ -21,14 +23,19 @@ namespace NeoMatrix.HostedServices
         private readonly NodeCaller _caller;
 
         private readonly MatrixDbContext _dbContext;
+        private readonly RedisService _redisService;
 
         private readonly ConcurrentDictionary<int, NodeCache> _cache = new ConcurrentDictionary<int, NodeCache>();
+
+        private readonly int _methodsCount;
 
         public RpcCheckHostedService(
             ILogger<RpcCheckHostedService> logger,
             NodeSeedsLoader seedsLoader,
             NodeCaller caller,
-            MatrixDbContext dbContext)
+            MatrixDbContext dbContext,
+            RedisService redisService,
+            IOptions<RpcMethodOptions> methodOptions)
         {
             _logger = logger;
 
@@ -36,6 +43,9 @@ namespace NeoMatrix.HostedServices
             _caller = caller;
 
             _dbContext = dbContext;
+            _redisService = redisService;
+
+            _methodsCount = methodOptions.Value.Indexes.Length;
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -52,14 +62,30 @@ namespace NeoMatrix.HostedServices
 #if DEBUG
             Stopwatch sw = Stopwatch.StartNew();
 #endif
-            foreach (var node in nodes)
+            /*foreach (var node in nodes)
             {
                 var nodeCache = await _caller.ExecuteAsync(node);
                 _cache.TryAdd(node.Id, nodeCache);
-            }
+            }*/
+
+            var nodeRequests = nodes.AsParallel().Select(async node =>
+            {
+                var nodeCache = await _caller.ExecuteAsync(node);
+                _cache.TryAdd(node.Id, nodeCache);
+            });
+            await Task.WhenAll(nodeRequests);
+
 #if DEBUG
             sw.Stop();
-            _logger.LogInformation("Use time: {0}", sw.Elapsed.ToString());
+            var elaspsedTime = sw.Elapsed.ToString();
+            var nodesLength = nodes.Count();
+            var matrixsLength = nodesLength * _methodsCount;
+
+            await _redisService.SetStringPair("last_node_operations", nodesLength.ToString());
+            await _redisService.SetStringPair("last_matrix_operations", matrixsLength.ToString());
+            await _redisService.SetStringPair("last_matrix_operations_run_time", elaspsedTime);
+
+            _logger.LogInformation("Use time: {0}", elaspsedTime);
 #endif
         }
 
@@ -83,14 +109,9 @@ namespace NeoMatrix.HostedServices
                     });
                 }
             }
-            await _dbContext.MatrixItems.AddRangeAsync(entities, cancellationToken);
-            await _dbContext.SaveChangesAsync(cancellationToken);
-            long deletedMaxId = await CheckDeleteOldestGroupAsync(groupId, cancellationToken);
-            if (deletedMaxId >= 1000_000_000)
-            {
-                await _dbContext.Database.ExecuteSqlRawAsync($"ALTER TABLE `{nameof(_dbContext.MatrixItems)}` AUTO_INCREMENT = 1;", cancellationToken);
-            }
-            _dbContext.Dispose();
+
+            await _redisService.ClearAllMatrixItem();
+            await _redisService.PushAllMatrixItem(entities);
         }
 
         private static long CreateGroupId()
