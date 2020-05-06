@@ -26,7 +26,11 @@ namespace NeoMatrix
         private readonly CommonMethodOption _commonOption;
         private readonly RpcMethodOption[] _rpcMethods;
 
-        public NodeCaller(IHttpClientFactory clientFactory, IValidatePipelineBuilder pipelineBuilder, IOptions<CommonMethodOption> commonOption, IOptions<RpcMethodOptions> methodOptions)
+        public NodeCaller(
+            IHttpClientFactory clientFactory, 
+            IValidatePipelineBuilder pipelineBuilder, 
+            IOptions<CommonMethodOption> commonOption, 
+            IOptions<RpcMethodOptions> methodOptions)
         {
             _commonOption = commonOption.Value ?? throw new ArgumentNullException(nameof(CommonMethodOption));
             var allRpcMethods = methodOptions.Value?.Items ?? throw new ArgumentNullException(nameof(RpcMethodOptions));
