@@ -21,7 +21,7 @@ An API checker use to get API status infos from nodes running by NEO eco.
 
 ### Usage
 
-1. Create Datebase called `neo_matrix` in MySQL manually.
+1. Create Datebase in MySQL manually.
 
 2. Check the *ConnectionStrings* among [appsettings.json](https://github.com/alienworks/neo-matrix/blob/master/CSharp/NeoMatrix/appsettings.json). Replace it with your own setting if necessary.
 
@@ -29,7 +29,7 @@ An API checker use to get API status infos from nodes running by NEO eco.
 
 4. Open the ***Package Manager Console*** and set the default project as `src\NeoMatrix.Data`.
 
-5. Execute the command line: `Add-Migration neo_matrix -c MatrixDbContext`, and wait for the end of migration files creating.
+5. Execute the command line: `Add-Migration neonodes_local_v1.4.0 -c MatrixDbContext`, and wait for the end of migration files creating.
 
 6. Execute the command line: `Update-Database`, and then check the database whether the data tables are created.
 
