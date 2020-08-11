@@ -13,6 +13,6 @@ namespace NeoMatrix
 
         public Node Node { get; }
 
-        public ConcurrentDictionary<string, ValidateResult<bool>> MethodsResult { get; } = new ConcurrentDictionary<string, ValidateResult<bool>>();
+        public ConcurrentDictionary<string, ValidateResult<ValidationResultType>> MethodsResult { get; } = new ConcurrentDictionary<string, ValidateResult<ValidationResultType>>();
     }
 }

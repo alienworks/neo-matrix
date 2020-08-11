@@ -26,6 +26,7 @@ namespace NeoMatrix.Data
                 e.Property(p => p.Method).HasColumnType("VARCHAR(30)").IsRequired();
                 e.Property(p => p.Net).HasColumnType("VARCHAR(20)");
                 e.Property(p => p.Error).HasColumnType("VARCHAR(500)");
+                e.Property(p => p.Available).HasColumnType("TINYINT(2)").IsRequired();
                 e.Property(p => p.CreateTime)
                 .HasColumnType("DATETIME")
                 .HasDefaultValueSql("now()")

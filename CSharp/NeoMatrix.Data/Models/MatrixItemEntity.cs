@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace NeoMatrix.Data.Models
 {
@@ -12,7 +13,7 @@ namespace NeoMatrix.Data.Models
 
         public string Method { get; set; }
 
-        public bool Available { get; set; }
+        public byte Available { get; set; }
 
         public string Error { get; set; }
 

@@ -77,14 +77,21 @@ namespace NeoMatrix.HostedServices
                         Net = node.Net,
                         Url = node.Url,
                         Method = methodItem.Key,
-                        Available = methodItem.Value.Result,
+                        Available = (byte)methodItem.Value.Result,
                         GroupId = groupId,
                         Error = methodItem.Value.ToFullErrorMsg()
                     });
                 }
             }
             await _dbContext.MatrixItems.AddRangeAsync(entities, cancellationToken);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            try
+            {
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+            }
             long deletedMaxId = await CheckDeleteOldestGroupAsync(groupId, cancellationToken);
             if (deletedMaxId >= 1000_000_000)
             {

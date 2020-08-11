@@ -10,7 +10,12 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             services.AddDbContext<MatrixDbContext>(opt =>
             {
-                opt.UseMySql(configuration.GetConnectionString("DefaultConnection"));
+                opt.UseMySql(configuration.GetConnectionString("DefaultConnection"), builder =>
+                {
+                    builder
+                    .EnableRetryOnFailure(3)
+                    .CommandTimeout(3);
+                });
             });
         }
     }
