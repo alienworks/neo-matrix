@@ -14,6 +14,7 @@ namespace NeoMatrix
             hostBuilder.UseConsoleLifetime();
             using var host = hostBuilder.Build();
             await host.StartAsync();
+            await Task.Delay(5000);//Give time to prepare for stopping
             // Console.ReadKey();
             await host.StopAsync();
         }
