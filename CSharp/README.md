@@ -34,3 +34,11 @@ An API checker use to get API status infos from nodes running by NEO eco.
 6. Execute the command line: `Update-Database`, and then check the database whether the data tables are created.
 
 7. Run the console.
+
+### Validation Progress
+
+1. Send Http request and check if Http status is OK in a limit of TIMEOUT.
+
+2. Try to deserialize the Http response and check if the content is a valid format of JSON.
+
+3. Check if the JSON is in the contemplation of what the *appsettings.json* defines.
