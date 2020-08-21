@@ -10,7 +10,7 @@ Currently it just a simple scripting. Providing with basic CSV output and errlog
 
 ```sh
 git clone https://github.com/alientworks/neo-matrix
-cd neo-matrix
+cd neo-matrix/Typescript
 npm i
 ```
 
