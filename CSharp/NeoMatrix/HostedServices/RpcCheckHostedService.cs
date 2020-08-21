@@ -61,10 +61,6 @@ namespace NeoMatrix.HostedServices
             sw.Stop();
             _logger.LogInformation("Use time: {0}", sw.Elapsed.ToString());
 #endif
-        }
-
-        public async Task StopAsync(CancellationToken cancellationToken)
-        {
             long groupId = CreateGroupId();
             var entities = new List<MatrixItemEntity>(_cache.Count * 32);
             foreach (var cache in _cache.Values)
@@ -97,7 +93,11 @@ namespace NeoMatrix.HostedServices
             {
                 await _dbContext.Database.ExecuteSqlRawAsync($"ALTER TABLE `{nameof(_dbContext.MatrixItems)}` AUTO_INCREMENT = 1;", cancellationToken);
             }
-            _dbContext.Dispose();
+        }
+
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            return Task.CompletedTask;
         }
 
         private static long CreateGroupId()
